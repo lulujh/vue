@@ -409,10 +409,12 @@ export function mergeOptions (
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
   // 处理原始 child 对象上的 extends 和 mixins，分别执行 mergeOptions，将这些继承而来的选项合并到 parent
+  // /src/core/global-api/index.js Vue.options._base = Vue，mergeOptions 处理过的对象会含有 _base 属性
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
     }
+    // 合并混入
     if (child.mixins) {
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
@@ -434,6 +436,7 @@ export function mergeOptions (
   }
   // 合并选项
   function mergeField (key) {
+    // strat 是合并策略函数
     const strat = strats[key] || defaultStrat
     // child 优先级高于 parent
     options[key] = strat(parent[key], child[key], vm, key)

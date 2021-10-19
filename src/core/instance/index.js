@@ -18,10 +18,13 @@ function Vue (options) {
 
 // 定义 Vue.prototype._init
 initMixin(Vue)
-// $set $delete $watch
+// Vue.prototype.$data $props $set $delete $watch
 stateMixin(Vue)
+// Vue.prototype.$on $once $off $emit
 eventsMixin(Vue)
+// Vue.prototype._update $forceUpdate $destroy
 lifecycleMixin(Vue)
+// Vue.prototype.$nextTick Vue.prototype._render
 renderMixin(Vue)
 
 export default Vue
