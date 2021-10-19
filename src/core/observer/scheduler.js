@@ -31,6 +31,9 @@ function resetSchedulerState () {
   if (process.env.NODE_ENV !== 'production') {
     circular = {}
   }
+  // waiting = flushing = false 表示队列刷新结束
+  // flushing = false 可以 queue.push(watcher)
+  // waiting 可以调用 nextTick
   waiting = flushing = false
 }
 
@@ -67,9 +70,11 @@ if (inBrowser && !isIE) {
 
 /**
  * Flush both queues and run the watchers.
+ * 刷新队列，由 flushCallbacks 函数负责调用
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
+  // 更新flushing为true，表示正在刷新队列，此时往队列中添加新的 watcher 需要特殊处理，详见 queueWatcher
   flushing = true
   let watcher, id
 
@@ -81,17 +86,28 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  /**
+   * 根据 watcher.id 从小到大排序
+   * 组件的更新顺序为从父级到子级，父组件总是在子组件之前被创建
+   * 一个组件的用户 watcher 在其渲染 watcher 之前被执行，因为用户watcher 先于 渲染watcher创建
+   * 如果一个组件在其父组件的 watcher 执行期间被销毁，则它的watcher可以被跳过
+   * 排序以后在刷新队列期间新进来的 watcher 也会按顺序放入队列的合适位置
+   */
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 遍历 watcher 队列，使用queue.length动态计算长度，因为在执行现有 watcher 期间队列中可能会被 push 进新的 watcher
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
+    // 执行 before 钩子，可以通过options.before传递，渲染watcher会调用生命周期beforeUpdate
     if (watcher.before) {
       watcher.before()
     }
+    // 将缓存的 watcher 清除
     id = watcher.id
     has[id] = null
+    // 执行 watcher.run，最终触发更新函数，如：updateComponent 或 用户watcher
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -114,9 +130,10 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // 重置
   resetSchedulerState()
 
-  // call component updated and activated hooks
+  // call component updated and activated hooks 触发生命周期钩子
   callActivatedHooks(activatedQueue)
   callUpdatedHooks(updatedQueue)
 
@@ -160,30 +177,41 @@ function callActivatedHooks (queue) {
  * Push a watcher into the watcher queue.
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
+ * 将 watcher 放入 watcher 队列
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
+    // 缓存 watcher.id，用于判断 watcher 是否已经入队
     has[id] = true
     if (!flushing) {
+      // 当前没有处于刷新队列状态，watcher 入队
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      // 已经在刷新状态 倒序遍历
+      // 根据watcher.id，放入已排序的队列中
+      // 如果比它大的id已执行，直接放在其后，下次立即执行
       let i = queue.length - 1
+      // index 为当前刷新的watcher在队列中的位置
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
+    // waiting等待刷新，true已调用异步，等待异步任务执行
     if (!waiting) {
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
+        // 一般不会走这里，Vue 默认是异步执行
         flushSchedulerQueue()
         return
       }
+      // 熟悉的 nextTick => Vue.nextTick、vm.$nextTick
+      // 将 flushSchedulerQueue 放入callbacks 数组
       nextTick(flushSchedulerQueue)
     }
   }

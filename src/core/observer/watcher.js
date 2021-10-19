@@ -113,7 +113,7 @@ export default class Watcher {
     let value
     const vm = this.vm
     try {
-      // 执行回调函数，比如 updateComponent，进入 patch 阶段
+      // 执行回调函数，比如 updateComponent、this.xxx
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
