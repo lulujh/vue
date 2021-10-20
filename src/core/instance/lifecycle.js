@@ -66,7 +66,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
     if (!prevVnode) {
-      // initial render 首次渲染，初始化时走这里
+      // initial render 老 VNone不存在，首次渲染，初始化时走这里
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates 响应式数据更新时，即更新页面时走这里
@@ -196,6 +196,7 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
+      // 执行 vm._render() 函数，得到 VNode，并将 VNode 传递给 vm._update 方法，接下来就该到 patch 阶段了
       vm._update(vm._render(), hydrating)
     }
   }
