@@ -12,6 +12,8 @@ import { bindObjectListeners } from './bind-object-listeners'
 import { resolveScopedSlots } from './resolve-scoped-slots'
 import { bindDynamicKeys, prependModifier } from './bind-dynamic-keys'
 
+// 该方法负责在实例上安装大量和渲染相关的简写的工具函数，这些工具函数用在编译器生成的渲染函数中
+// 比如 v-for 编译后的 vm._l 等
 export function installRenderHelpers (target: any) {
   target._o = markOnce
   target._n = toNumber
