@@ -33,6 +33,8 @@ export function handleError (err: Error, vm: any, info: string) {
   }
 }
 
+// 通用函数，执行指定函数 handler
+// 传递进来的函数会被 try catch 包裹，进行异常捕获处理
 export function invokeWithErrorHandling (
   handler: Function,
   context: any,

@@ -343,17 +343,24 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 执行实例指定的生命周期钩子函数
+// 如果实例设置有对应的 Hook Event，如：<comp @hook:mounted="method" /> 或 this.$on('hook:beforeDestroy,()=>{})
+// 执行完生命周期函数之后，再触发该事件的执行
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
+  // 在执行生命周期钩子函数期间禁止依赖收集
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`
   if (handlers) {
     for (let i = 0, j = handlers.length; i < j; i++) {
+      // 执行生命周期钩子
       invokeWithErrorHandling(handlers[i], vm, null, vm, info)
     }
   }
+  // vm._hasHookEvent 标识组件是否有 hook event，这是在 $on 中处理组件自定义事件时设置的
   if (vm._hasHookEvent) {
+    // 通过 $emit 触发
     vm.$emit('hook:' + hook)
   }
   popTarget()
