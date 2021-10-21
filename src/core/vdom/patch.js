@@ -327,15 +327,18 @@ export function createPatchFunction (backend) {
     }
   }
 
+    // 创建所有子节点，并将子节点插入父节点，形成一颗DOM树
   function createChildren (vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {
         checkDuplicateKeys(children)
       }
+      // 遍历这组节点，依次创建这些节点，然后插入父节点，形成一颗DOM树
       for (let i = 0; i < children.length; ++i) {
         createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
       }
     } else if (isPrimitive(vnode.text)) {
+      // 说明是文本节点，创建文本节点，并插入父节点
       nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)))
     }
   }
@@ -586,6 +589,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 找到新节点vnode在老节点oldCh中的位置索引
   function findIdxInOld (node, oldCh, start, end) {
     for (let i = start; i < end; i++) {
       const c = oldCh[i]
