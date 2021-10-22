@@ -75,17 +75,24 @@ export function createASTElement (
 
 /**
  * Convert HTML string to AST.
+ * 将HTML字符串转换为AST
  */
 export function parse (
   template: string,
   options: CompilerOptions
 ): ASTElement | void {
+  // 日志
   warn = options.warn || baseWarn
 
+  // 是否为 pre 标签
   platformIsPreTag = options.isPreTag || no
+  // 必须使用 props 进行绑定的属性
   platformMustUseProp = options.mustUseProp || no
+  // 获取标签的命名空间
   platformGetTagNamespace = options.getTagNamespace || no
+  // 是否是保留标签 html svg
   const isReservedTag = options.isReservedTag || no
+  // 判断一个元素是否为一个组件
   maybeComponent = (el: ASTElement) => !!(
     el.component ||
     el.attrsMap[':is'] ||
@@ -101,7 +108,9 @@ export function parse (
   const stack = []
   const preserveWhitespace = options.preserveWhitespace !== false
   const whitespaceOption = options.whitespace
+  // 根节点，以 root 为跟，处理后的节点都会按照层级挂载到 root 下，最后 return 的就是 root，一个 ast 语法树
   let root
+  // 当前元素的父元素
   let currentParent
   let inVPre = false
   let inPre = false
@@ -205,6 +214,7 @@ export function parse (
     }
   }
 
+  // 解析 html 模版字符串，处理所有标签以及标签上的属性
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -400,6 +410,8 @@ export function parse (
       }
     }
   })
+
+  // 返回生成的ast对象
   return root
 }
 
