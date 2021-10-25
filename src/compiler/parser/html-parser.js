@@ -345,6 +345,8 @@ export function parseHTML (html, options) {
     if (start == null) start = index
     if (end == null) end = index
 
+    // 倒序遍历 stack 数组，找到第一个和当前结束标签相同的标签，该标签就是结束标签对应的开始标签的描述对象
+    // 理论上，不出异常，stack 数组中的最后一个元素就是当前结束标签的开始标签的描述
     // Find the closest opened tag of the same type
     if (tagName) {
       lowerCasedTagName = tagName.toLowerCase()
@@ -359,6 +361,13 @@ export function parseHTML (html, options) {
     }
 
     if (pos >= 0) {
+      // 这个for循环负责关闭stack数组中索引 >= pos 的所有标签
+      // 为什么要用一个循环，上面说到正常情况下 stack 数组的最后一个元素就是我们要找的开始标签
+      // 但是有些异常情况，就是有些元素没有给提供结束标签，如：
+      // stack = ['span', 'div', 'span', 'h1']，当前处理的结束标签 tagName = div
+      // 匹配到 div, pos = 1,那索引为2和3的两个标签span、h1说明就没提供结束标签
+      // 这个for循环就负责关闭div span 和 h1 这三个标签
+      // 并在开发环境为 span 和 h1 这两个标签给出 未匹配到结束标签的提示
       // Close all the open elements, up the stack
       for (let i = stack.length - 1; i >= pos; i--) {
         if (process.env.NODE_ENV !== 'production' &&
@@ -371,22 +380,28 @@ export function parseHTML (html, options) {
           )
         }
         if (options.end) {
+          // 调用 options.end 处理正常的结束标签
           options.end(stack[i].tag, start, end)
         }
       }
 
+      // 将刚才处理的那些标签从数组中移除，保证数组的最后一个元素就是下一个结束标签的开始标签
       // Remove the open elements from the stack
       stack.length = pos
+      // lastTag记录 stack 数组中未处理的最后一个开始标签
       lastTag = pos && stack[pos - 1].tag
     } else if (lowerCasedTagName === 'br') {
+      // 当前处理的标签为 <br /> 标签
       if (options.start) {
         options.start(tagName, [], true, start, end)
       }
     } else if (lowerCasedTagName === 'p') {
       if (options.start) {
+        // 处理 <p>
         options.start(tagName, [], false, start, end)
       }
       if (options.end) {
+        // 处理 </p>
         options.end(tagName, start, end)
       }
     }

@@ -224,6 +224,19 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    /**
+     * 创建 AST 对象
+     * 处理存在 v-model 指令的 input 标签，分别处理 input 为 checkbox、radio、其他情况
+     * 处理标签上的众多指令，比如 v-pre v-for v-if v-once
+     * 如果根节点root不存在则设置当前元素为根节点
+     * 如果当前元素为非自闭合标签，则将自己push到stack数组，并记录currentParent，在接下来处理子元素时用来告诉子元素自己的父节点是谁
+     * 如果当前元素为自闭合标签，则表示该标签要处理结束了，让自己和父元素产生关系，以及设置自己的子元素
+     * @param {*} tag 
+     * @param {*} attrs 
+     * @param {*} unary 
+     * @param {*} start 
+     * @param {*} end 
+     */
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
